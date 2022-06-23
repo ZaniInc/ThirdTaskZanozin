@@ -1,0 +1,369 @@
+{
+  "contractName": "IVesting",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "initialTimestamp_",
+          "type": "uint256"
+        }
+      ],
+      "name": "setInitialTimestamp",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address[]",
+          "name": "investors_",
+          "type": "address[]"
+        },
+        {
+          "internalType": "uint256[]",
+          "name": "amount_",
+          "type": "uint256[]"
+        },
+        {
+          "internalType": "enum IVesting.Allocation[]",
+          "name": "allocation_",
+          "type": "uint8[]"
+        }
+      ],
+      "name": "addInvestors",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "withdrawTokens",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "metadata": "{\"compiler\":{\"version\":\"0.8.14+commit.80d49f37\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address[]\",\"name\":\"investors_\",\"type\":\"address[]\"},{\"internalType\":\"uint256[]\",\"name\":\"amount_\",\"type\":\"uint256[]\"},{\"internalType\":\"enum IVesting.Allocation[]\",\"name\":\"allocation_\",\"type\":\"uint8[]\"}],\"name\":\"addInvestors\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"initialTimestamp_\",\"type\":\"uint256\"}],\"name\":\"setInitialTimestamp\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"withdrawTokens\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"project:/interfaces/IVesting.sol\":\"IVesting\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":false,\"runs\":200},\"remappings\":[]},\"sources\":{\"project:/interfaces/IVesting.sol\":{\"keccak256\":\"0x46b1ecb6a68901bc4ef197c2993fbff0e548df0faf611e897a4c3ab2fabf7783\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://99758fb315297ada7ea2be3bc718f9236fda2afa883825d2c559803e75a23c61\",\"dweb:/ipfs/QmbkWwvDxxWmvQeC61Eg9TvNgdi2izdzixk5PwsvXa9UnD\"]}},\"version\":1}",
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "immutableReferences": {},
+  "generatedSources": [],
+  "deployedGeneratedSources": [],
+  "sourceMap": "",
+  "deployedSourceMap": "",
+  "source": "// SPDX-License-Identifier: MIT\n\npragma solidity 0.8.14;\n\ninterface IVesting {\n\n    enum Allocation {Seed, Private}\n\n    function setInitialTimestamp (uint256 initialTimestamp_) external;\n\n    function addInvestors (address[]calldata investors_,uint256 [] calldata amount_,Allocation [] calldata allocation_) external;\n\n    function withdrawTokens () external;\n}",
+  "sourcePath": "/Users/pavel/ThirdTaskZanozin/interfaces/IVesting.sol",
+  "ast": {
+    "absolutePath": "project:/interfaces/IVesting.sol",
+    "exportedSymbols": {
+      "IVesting": [
+        988
+      ]
+    },
+    "id": 989,
+    "license": "MIT",
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 963,
+        "literals": [
+          "solidity",
+          "0.8",
+          ".14"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "33:23:6"
+      },
+      {
+        "abstract": false,
+        "baseContracts": [],
+        "canonicalName": "IVesting",
+        "contractDependencies": [],
+        "contractKind": "interface",
+        "fullyImplemented": false,
+        "id": 988,
+        "linearizedBaseContracts": [
+          988
+        ],
+        "name": "IVesting",
+        "nameLocation": "68:8:6",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "canonicalName": "IVesting.Allocation",
+            "id": 966,
+            "members": [
+              {
+                "id": 964,
+                "name": "Seed",
+                "nameLocation": "101:4:6",
+                "nodeType": "EnumValue",
+                "src": "101:4:6"
+              },
+              {
+                "id": 965,
+                "name": "Private",
+                "nameLocation": "107:7:6",
+                "nodeType": "EnumValue",
+                "src": "107:7:6"
+              }
+            ],
+            "name": "Allocation",
+            "nameLocation": "89:10:6",
+            "nodeType": "EnumDefinition",
+            "src": "84:31:6"
+          },
+          {
+            "functionSelector": "21f926db",
+            "id": 971,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "setInitialTimestamp",
+            "nameLocation": "130:19:6",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 969,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 968,
+                  "mutability": "mutable",
+                  "name": "initialTimestamp_",
+                  "nameLocation": "159:17:6",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 971,
+                  "src": "151:25:6",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 967,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "151:7:6",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "150:27:6"
+            },
+            "returnParameters": {
+              "id": 970,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "186:0:6"
+            },
+            "scope": 988,
+            "src": "121:66:6",
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "functionSelector": "bba55453",
+            "id": 984,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "addInvestors",
+            "nameLocation": "202:12:6",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 982,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 974,
+                  "mutability": "mutable",
+                  "name": "investors_",
+                  "nameLocation": "234:10:6",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 984,
+                  "src": "216:28:6",
+                  "stateVariable": false,
+                  "storageLocation": "calldata",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_array$_t_address_$dyn_calldata_ptr",
+                    "typeString": "address[]"
+                  },
+                  "typeName": {
+                    "baseType": {
+                      "id": 972,
+                      "name": "address",
+                      "nodeType": "ElementaryTypeName",
+                      "src": "216:7:6",
+                      "stateMutability": "nonpayable",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_address",
+                        "typeString": "address"
+                      }
+                    },
+                    "id": 973,
+                    "nodeType": "ArrayTypeName",
+                    "src": "216:9:6",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_array$_t_address_$dyn_storage_ptr",
+                      "typeString": "address[]"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 977,
+                  "mutability": "mutable",
+                  "name": "amount_",
+                  "nameLocation": "265:7:6",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 984,
+                  "src": "245:27:6",
+                  "stateVariable": false,
+                  "storageLocation": "calldata",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_array$_t_uint256_$dyn_calldata_ptr",
+                    "typeString": "uint256[]"
+                  },
+                  "typeName": {
+                    "baseType": {
+                      "id": 975,
+                      "name": "uint256",
+                      "nodeType": "ElementaryTypeName",
+                      "src": "245:7:6",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint256",
+                        "typeString": "uint256"
+                      }
+                    },
+                    "id": 976,
+                    "nodeType": "ArrayTypeName",
+                    "src": "245:10:6",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_array$_t_uint256_$dyn_storage_ptr",
+                      "typeString": "uint256[]"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 981,
+                  "mutability": "mutable",
+                  "name": "allocation_",
+                  "nameLocation": "296:11:6",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 984,
+                  "src": "273:34:6",
+                  "stateVariable": false,
+                  "storageLocation": "calldata",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_array$_t_enum$_Allocation_$966_$dyn_calldata_ptr",
+                    "typeString": "enum IVesting.Allocation[]"
+                  },
+                  "typeName": {
+                    "baseType": {
+                      "id": 979,
+                      "nodeType": "UserDefinedTypeName",
+                      "pathNode": {
+                        "id": 978,
+                        "name": "Allocation",
+                        "nodeType": "IdentifierPath",
+                        "referencedDeclaration": 966,
+                        "src": "273:10:6"
+                      },
+                      "referencedDeclaration": 966,
+                      "src": "273:10:6",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_enum$_Allocation_$966",
+                        "typeString": "enum IVesting.Allocation"
+                      }
+                    },
+                    "id": 980,
+                    "nodeType": "ArrayTypeName",
+                    "src": "273:13:6",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_array$_t_enum$_Allocation_$966_$dyn_storage_ptr",
+                      "typeString": "enum IVesting.Allocation[]"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "215:93:6"
+            },
+            "returnParameters": {
+              "id": 983,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "317:0:6"
+            },
+            "scope": 988,
+            "src": "193:125:6",
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "functionSelector": "8d8f2adb",
+            "id": 987,
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "withdrawTokens",
+            "nameLocation": "333:14:6",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 985,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "348:2:6"
+            },
+            "returnParameters": {
+              "id": 986,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "359:0:6"
+            },
+            "scope": 988,
+            "src": "324:36:6",
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "external"
+          }
+        ],
+        "scope": 989,
+        "src": "58:304:6",
+        "usedErrors": []
+      }
+    ],
+    "src": "33:329:6"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.8.14+commit.80d49f37.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "3.4.7",
+  "updatedAt": "2022-06-23T15:19:17.759Z",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  }
+}

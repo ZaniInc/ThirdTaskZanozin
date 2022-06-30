@@ -4,9 +4,17 @@
   "rules": {
     "avoid-suicide": "error",
     "avoid-sha3": "error",
-    "compiler-version": ["error","0.8.14"],
+    "compiler-version": [
+      "error",
+      "0.8.14"
+    ],
     "no-empty-blocks": "off",
-    "func-visibility": ["error",{"ignoreConstructors":true}],
+    "func-visibility": [
+      "error",
+      {
+        "ignoreConstructors": true
+      }
+    ],
     "no-unused-vars": "error",
     "const-name-snakecase": "error",
     "contract-name-camelcase": "error",
@@ -17,12 +25,20 @@
     "private-vars-leading-underscore": "error",
     "var-name-mixedcase": "error",
     "imports-on-top": "error",
-    "function-max-lines": ["error", 50],
-    "max-line-length": ["error", 120],
-    "quotes": ["error","double"],
+    "function-max-lines": [
+      "error",
+      50
+    ],
+    "max-line-length": [
+      "error",
+      120
+    ],
+    "quotes": [
+      "error",
+      "double"
+    ],
     "ordering": "error",
     "check-send-result": "error",
     "state-visibility": "error"
   }
-  
 }

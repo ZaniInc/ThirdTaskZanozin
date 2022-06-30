@@ -4,15 +4,24 @@ pragma solidity 0.8.7;
 
 interface IVesting {
 
-    enum Allocation {Seed, Private}
+    event VestingStart (uint256 startDate);
 
-    function setInitialTimestamp (uint256 initialTimestamp_) external;
+    event AddInvestors (address[] investors , uint256[] balances);
 
-    function addInvestors (
-    address[]calldata investors_,
-    uint256 [] calldata amount_,
-    Allocation [] calldata allocation_
+    event Withdraw (address to, uint256 amountTokens);
+
+    enum Allocation {
+        Seed,
+        Private
+    }
+
+    function setInitialTimestamp(uint256 initialTimestamp_) external;
+
+    function addInvestors(
+        address[] calldata investors_,
+        uint256[] calldata amount_,
+        Allocation[] calldata allocation_
     ) external;
 
-    function withdrawTokens () external;
+    function withdrawTokens() external;
 }

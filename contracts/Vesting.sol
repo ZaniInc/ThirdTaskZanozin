@@ -3,120 +3,143 @@
 pragma solidity 0.8.7;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 import "../interfaces/IVesting.sol";
 
-contract Vesting is IVesting {
+contract Vesting is IVesting, Ownable {
+    using SafeERC20 for IERC20;
+
     struct Beneficiary {
-        address investor;
-        uint256 balance;
-        IVesting.Allocation location;
+        uint256 intialReward;
+        uint256 rewardPaid;
+        uint256 balanceBase;
     }
 
     mapping(address => Beneficiary) public listOfBeneficiaries;
-    mapping(address => uint256) public balance;
-    uint256 public seedWallet;
-    uint256 public privateWallet;
-    uint256 public vestedAmount;
-    address public owner;
+    mapping(Allocation => mapping(address => Beneficiary))
+        public allocationList;
     uint256 public vestingStartDate;
     uint256 public vestingDuration;
     uint256 public vestingCliff;
-    uint256 reward;
 
     IERC20 private _token;
-    uint256 nonce;
 
-    constructor(address token_, uint256 amount_) {
+    constructor(address token_) {
+        require(
+            Address.isContract(token_),
+            "Error : Incorrect address , only contract address"
+        );
         _token = IERC20(token_);
-        owner = msg.sender;
-        vestedAmount = amount_;
-        seedWallet = (owner.balance() / 10000) * 1000;
-        privateWallet = (owner.balance() / 10000) * 1500;
-        vestingCliff = initialTimeVesting + 10 minutes;
-        vestingDuration = initialTimeVesting + 600 minutes;
-    }
-
-    modifier onlyOwner() {
-        require(owner == msg.sender);
-        _;
-    }
-
-    modifier onlyOnce() {
-        require(nonce == 0);
-        _;
-    }
-
-    modifier unlockTimer() {
-        if(block.timestamp < vestingDuration){
-            uint256 unlockTimes = 6 minutes;
-            uint256 actualTime = (block.timestamp - vestingStartDate) / unlockTimes;
-            reward = actualTime;
-        _;
-        }
-        else if (block.timestamp > vestingDuration){
-            reward = 100;
-            _;
-        }
     }
 
     function setInitialTimestamp(uint256 initialTimestamp_)
         external
         override
         onlyOwner
-        onlyOnce
     {
-        nonce++;
+        require(
+            initialTimestamp_ != 0,
+            "Error : 'initialTimestamp_' must be greater than 0"
+        );
+        require(vestingStartDate == 0, "error : can call only once time");
         vestingStartDate = block.timestamp + initialTimestamp_;
+        vestingCliff = vestingStartDate + 10 minutes;
+        vestingDuration = vestingCliff + 600 minutes;
+        emit VestingStart(vestingStartDate);
     }
 
     function addInvestors(
         address[] calldata investors_,
         uint256[] calldata amount_,
-        IVesting.Allocation[] calldata allocation_
+        Allocation[] calldata allocation_
     ) external override onlyOwner {
+        require(
+            investors_.length == amount_.length &&
+                investors_.length == allocation_.length,
+            "Error : Different arrays length"
+        );
         uint256 sumOfAmount;
         for (uint256 i; i < investors_.length; i++) {
-            require(investors_[i] > address(0) && amount_[i] > 0);
-            listOfBeneficiaries[investors_[i]].investor = investors_[i];
-            listOfBeneficiaries[investors_[i]].location = allocation_[i];
-            listOfBeneficiaries[investors_[i]].balance += amount_[i];
-            balance[investors_[i]] += amount_[i];
+            require(
+                investors_[i] > address(0) && amount_[i] > 0,
+                "Error : 'investors_' or 'amount_' , equal to 0"
+            );
+            if (allocation_[i] == Allocation.Seed) {
+                allocationList[allocation_[i]][
+                    investors_[i]
+                ] = listOfBeneficiaries[investors_[i]];
+                listOfBeneficiaries[investors_[i]].intialReward += ((amount_[
+                    i
+                ] / 10000) * 1000);
+                uint256 safePoint = ((amount_[i] / 10000) * 1000);
+                listOfBeneficiaries[investors_[i]].balanceBase += (amount_[i] -
+                    safePoint);
+            }
+            if (allocation_[i] == Allocation.Private) {
+                allocationList[allocation_[i]][
+                    investors_[i]
+                ] = listOfBeneficiaries[investors_[i]];
+                listOfBeneficiaries[investors_[i]].intialReward += ((amount_[
+                    i
+                ] / 10000) * 1500);
+                uint256 safePoint = ((amount_[i] / 10000) * 1500);
+                listOfBeneficiaries[investors_[i]].balanceBase += (amount_[i] -
+                    safePoint);
+            }
             sumOfAmount += amount_[i];
         }
-        _token.transferFrom(msg.sender, address(this), sumOfAmount);
+        _token.safeTransferFrom(msg.sender, address(this), sumOfAmount);
+        emit AddInvestors(investors_,amount_);
     }
 
     function withdrawTokens() external override {
-        require(vestingStartDate > 0);
-        require(vestingCliff < block.timestamp);
-        address caller = msg.sender;
-        require(listOfBeneficiaries[caller].balance > 0);
-        require(balance[caller] > 0);
-        if (
-            listOfBeneficiaries[caller].location == IVesting.Allocation.Seed
-        ) {
-            uint256 amount = (balance[caller]/ 10000) * 1000;
-            listOfBeneficiaries[caller].balance -= amount;
-            _token.transfer(caller, amount);
-        }
-        else if (
-            listOfBeneficiaries[caller].location == IVesting.Allocation.Private
-        ) {
-            uint256 amount = (balance[caller]/ 10000) * 1500;
-            listOfBeneficiaries[caller].balance -= amount;
-            _token.transfer(caller, amount);
+        require(vestingStartDate > 0, "Error : first set 'vestingStartDate'");
+        require(
+            vestingCliff < block.timestamp,
+            "Error : wait until cliff period is end"
+        );
+        require(
+            listOfBeneficiaries[msg.sender].balanceBase > 0,
+            "Error : not enougth tokens"
+        );
+        require(
+            listOfBeneficiaries[msg.sender].rewardPaid <
+                listOfBeneficiaries[msg.sender].balanceBase,
+            "Error : not enougth tokens"
+        );
+        if (listOfBeneficiaries[msg.sender].intialReward > 0) {
+            uint256 amount = listOfBeneficiaries[msg.sender].intialReward +
+                (_calculatePercent(100) * _unlockTimer());
+            listOfBeneficiaries[msg.sender].intialReward = 0;
+            require(amount > 0, "Error : 'amount' equal to 0");
+            listOfBeneficiaries[msg.sender].rewardPaid += amount;
+            _token.safeTransfer(msg.sender, amount);
+             emit Withdraw(msg.sender,amount);
+        } else if (listOfBeneficiaries[msg.sender].intialReward == 0) {
+            uint256 amount = (_calculatePercent(100) * _unlockTimer());
+            require(amount > 0, "Error : 'amount' equal to 0");
+            listOfBeneficiaries[msg.sender].rewardPaid += amount;
+            _token.safeTransfer(msg.sender, amount);
+            emit Withdraw(msg.sender,amount);
         }
     }
 
-    function calculatePercent() internal returns (uint256) {
-        return (balance[msg.sender] / 10000) * 100;
+    function _calculatePercent(uint256 percent)
+        internal
+        view
+        returns (uint256)
+    {
+        return (listOfBeneficiaries[msg.sender].balanceBase / 10000) * percent;
     }
 
-    function claimTokens() external unlockTimer {
-        require(vestingCliff < block.timestamp);
-        uint256 collectTokens = reward * calculatePercent();
-        address caller = msg.sender;
-        listOfBeneficiaries[caller].balance -= collectTokens;
-        _token.transfer(caller, collectTokens);
+    function _unlockTimer() internal view returns (uint256) {
+        if (block.timestamp < vestingDuration) {
+            uint256 actualTime = (block.timestamp - vestingCliff) / 6 minutes;
+            return actualTime;
+        } else if (block.timestamp > vestingDuration) {
+            return 100;
+        }
     }
 }

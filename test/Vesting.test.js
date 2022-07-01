@@ -63,7 +63,7 @@ contract("Vesting", async ([owner, acc2, acc3, acc4]) => {
         let vestingStartDate = await instanceVesting.vestingStartDate.call();
         let timeChecker = await time.latest();
         expect(vestingStartDate.toString()).to.be.equal(timeChecker.add(new BN(60)).toString());
-        expectEvent(tx , "VestingStart" , {startDate:timeChecker.add(new BN(60))});
+        expectEvent(tx, "VestingStart", { startDate: timeChecker.add(new BN(60)) });
       });
     });
 
@@ -124,8 +124,8 @@ contract("Vesting", async ([owner, acc2, acc3, acc4]) => {
         let arrayEnums = [new BN(0), new BN(1), new BN(0)];
         await instanceToken.approve(instanceVesting.address, ether('6000'));
         let tx = await instanceVesting.addInvestors(arrayInvestors, arrayAmounts, arrayEnums);
-        let event = expectEvent(tx , "AddInvestors");
-        expectEvent(tx , "AddInvestors" , {investors:arrayInvestors});
+        let event = expectEvent(tx, "AddInvestors");
+        expectEvent(tx, "AddInvestors", { investors: arrayInvestors });
         expect(event.args.balances.toString()).to.be.equal(arrayAmounts.toString());
       });
       it("set Investors - done acc4 , have to allocations", async () => {
@@ -138,8 +138,8 @@ contract("Vesting", async ([owner, acc2, acc3, acc4]) => {
         let tx = await instanceVesting.addInvestors(arrayInvestors, arrayAmounts, arrayEnums);
         investor3After = await instanceVesting.listOfBeneficiaries(acc4);
         expect(investor3After[2].toString()).to.be.equal(ether('3550').toString());
-        let event = expectEvent(tx , "AddInvestors");
-        expectEvent(tx , "AddInvestors" , {investors:arrayInvestors});
+        let event = expectEvent(tx, "AddInvestors");
+        expectEvent(tx, "AddInvestors", { investors: arrayInvestors });
         expect(event.args.balances.toString()).to.be.equal(arrayAmounts.toString());
       });
     });
@@ -185,7 +185,7 @@ contract("Vesting", async ([owner, acc2, acc3, acc4]) => {
         expect(investorr1[1].toString()).to.be.equal(ether('100').toString());
         balanceTokens = await instanceToken.balanceOf(acc2);
         expect(balanceTokens.toString()).to.be.equal(ether('100').toString())
-        expectEvent(tx , "Withdraw" , {to:acc2,amountTokens:ether('100')});
+        expectEvent(tx, "Withdraw", { to: acc2, amountTokens: ether('100') });
       });
       it("take tokens with PRIVATE allocation", async () => {
         let balanceBefore = await instanceToken.balanceOf(acc3);
@@ -197,7 +197,7 @@ contract("Vesting", async ([owner, acc2, acc3, acc4]) => {
         expect(balanceTokens.toString()).to.be.equal(ether('300').toString());
         let investorr2 = await instanceVesting.listOfBeneficiaries(acc3);
         expect(investorr2[1].toString()).to.be.equal(ether('300').toString());
-        expectEvent(tx , "Withdraw" , {to:acc3,amountTokens:ether('300')});
+        expectEvent(tx, "Withdraw", { to: acc3, amountTokens: ether('300') });
       });
       it("take tokens with BOTH allocation", async () => {
         let balanceBefore = await instanceToken.balanceOf(acc4);
@@ -209,7 +209,7 @@ contract("Vesting", async ([owner, acc2, acc3, acc4]) => {
         expect(balanceTokens.toString()).to.be.equal(ether('450').toString());
         let investorr3 = await instanceVesting.listOfBeneficiaries(acc4);
         expect(investorr3[1].toString()).to.be.equal(ether('450').toString());
-        expectEvent(tx , "Withdraw" , {to:acc4,amountTokens:ether('450')});
+        expectEvent(tx, "Withdraw", { to: acc4, amountTokens: ether('450') });
       });
       it("take tokens AFTER 700 MINUTES", async () => {
         let balanceBefore = await instanceToken.balanceOf(acc2);
@@ -222,7 +222,7 @@ contract("Vesting", async ([owner, acc2, acc3, acc4]) => {
         expect(balanceTokens.toString()).to.be.equal(ether('1000').toString());
         let investorr1 = await instanceVesting.listOfBeneficiaries(acc2);
         expect(investorr1[1].toString()).to.be.equal(ether('1000').toString());
-        expectEvent(tx , "Withdraw" , {to:acc2,amountTokens:ether('900')});
+        expectEvent(tx, "Withdraw", { to: acc2, amountTokens: ether('900') });
       });
     });
 

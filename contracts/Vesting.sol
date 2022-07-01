@@ -73,9 +73,8 @@ contract Vesting is IVesting, Ownable {
                 listOfBeneficiaries[investors_[i]].intialReward += ((amount_[
                     i
                 ] / 10000) * 1000);
-                uint256 safePoint = ((amount_[i] / 10000) * 1000);
                 listOfBeneficiaries[investors_[i]].balanceBase += (amount_[i] -
-                    safePoint);
+                    ((amount_[i] / 10000) * 1000));
             }
             if (allocation_[i] == Allocation.Private) {
                 allocationList[allocation_[i]][
@@ -84,14 +83,13 @@ contract Vesting is IVesting, Ownable {
                 listOfBeneficiaries[investors_[i]].intialReward += ((amount_[
                     i
                 ] / 10000) * 1500);
-                uint256 safePoint = ((amount_[i] / 10000) * 1500);
                 listOfBeneficiaries[investors_[i]].balanceBase += (amount_[i] -
-                    safePoint);
+                    ((amount_[i] / 10000) * 1500));
             }
             sumOfAmount += amount_[i];
         }
         _token.safeTransferFrom(msg.sender, address(this), sumOfAmount);
-        emit AddInvestors(investors_,amount_);
+        emit AddInvestors(investors_, amount_);
     }
 
     function withdrawTokens() external override {
@@ -116,13 +114,13 @@ contract Vesting is IVesting, Ownable {
             require(amount > 0, "Error : 'amount' equal to 0");
             listOfBeneficiaries[msg.sender].rewardPaid += amount;
             _token.safeTransfer(msg.sender, amount);
-             emit Withdraw(msg.sender,amount);
+            emit Withdraw(msg.sender, amount);
         } else if (listOfBeneficiaries[msg.sender].intialReward == 0) {
             uint256 amount = (_calculatePercent(100) * _unlockTimer());
             require(amount > 0, "Error : 'amount' equal to 0");
             listOfBeneficiaries[msg.sender].rewardPaid += amount;
             _token.safeTransfer(msg.sender, amount);
-            emit Withdraw(msg.sender,amount);
+            emit Withdraw(msg.sender, amount);
         }
     }
 

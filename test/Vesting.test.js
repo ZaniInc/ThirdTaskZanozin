@@ -133,11 +133,11 @@ contract("Vesting", async ([owner, acc2, acc3, acc4]) => {
         let arrayAmounts = [ether('1000')];
         let arrayEnums = [new BN(1)];
         investor3 = await instanceVesting.listOfBeneficiaries(acc4);
-        expect(investor3[2].toString()).to.be.equal(ether('2700').toString());
+        expect(investor3[2].toString()).to.be.equal(ether('3000').toString());
         await instanceToken.approve(instanceVesting.address, ether('1000'));
         let tx = await instanceVesting.addInvestors(arrayInvestors, arrayAmounts, arrayEnums);
         investor3After = await instanceVesting.listOfBeneficiaries(acc4);
-        expect(investor3After[2].toString()).to.be.equal(ether('3550').toString());
+        expect(investor3After[2].toString()).to.be.equal(ether('4000').toString());
         let event = expectEvent(tx, "AddInvestors");
         expectEvent(tx, "AddInvestors", { investors: arrayInvestors });
         expect(event.args.balances.toString()).to.be.equal(arrayAmounts.toString());
@@ -151,13 +151,13 @@ contract("Vesting", async ([owner, acc2, acc3, acc4]) => {
         let investor3 = await instanceVesting.listOfBeneficiaries(acc4);
         expect(investor1[0].toString()).to.be.equal(ether('100').toString());
         expect(investor1[1].toString()).to.be.equal(ether('0').toString());
-        expect(investor1[2].toString()).to.be.equal(ether('900').toString());
+        expect(investor1[2].toString()).to.be.equal(ether('1000').toString());
         expect(investor2[0].toString()).to.be.equal(ether('300').toString());
         expect(investor2[1].toString()).to.be.equal(ether('0').toString());
-        expect(investor2[2].toString()).to.be.equal(ether('1700').toString());
+        expect(investor2[2].toString()).to.be.equal(ether('2000').toString());
         expect(investor3[0].toString()).to.be.equal(ether('450').toString());
         expect(investor3[1].toString()).to.be.equal(ether('0').toString());
-        expect(investor3[2].toString()).to.be.equal(ether('3550').toString());
+        expect(investor3[2].toString()).to.be.equal(ether('4000').toString());
       });
     });
   });
@@ -211,18 +211,57 @@ contract("Vesting", async ([owner, acc2, acc3, acc4]) => {
         expect(investorr3[1].toString()).to.be.equal(ether('450').toString());
         expectEvent(tx, "Withdraw", { to: acc4, amountTokens: ether('450') });
       });
-      it("take tokens AFTER 700 MINUTES", async () => {
+      it("take tokens AFTER 300 MINUTES by acc2", async () => {
         let balanceBefore = await instanceToken.balanceOf(acc2);
         expect(balanceBefore.toString()).to.be.equal(ether('100').toString());
         let investor1 = await instanceVesting.listOfBeneficiaries(acc2);
         expect(investor1[1].toString()).to.be.equal(ether('100').toString());
-        await time.increase(time.duration.minutes(700));
+        await time.increase(time.duration.minutes(300));
+        let tx = await instanceVesting.withdrawTokens({ from: acc2 });
+        let investorr1 = await instanceVesting.listOfBeneficiaries(acc2);
+        expect(investorr1[1].toString()).to.be.equal(ether('500').toString());
+        balanceTokens = await instanceToken.balanceOf(acc2);
+        expect(balanceTokens.toString()).to.be.equal(ether('500').toString());
+        expectEvent(tx, "Withdraw", { to: acc2, amountTokens: ether('400') });
+      });
+      it("take tokens AFTER 597 MINUTES by acc2", async () => {
+        let balanceBefore = await instanceToken.balanceOf(acc2);
+        expect(balanceBefore.toString()).to.be.equal(ether('500').toString());
+        let investor1 = await instanceVesting.listOfBeneficiaries(acc2);
+        expect(investor1[1].toString()).to.be.equal(ether('500').toString());
+        await time.increase(time.duration.minutes(297));
+        let tx = await instanceVesting.withdrawTokens({ from: acc2 });
+        let investorr1 = await instanceVesting.listOfBeneficiaries(acc2);
+        expect(investorr1[1].toString()).to.be.equal(ether('990').toString());
+        balanceTokens = await instanceToken.balanceOf(acc2);
+        expect(balanceTokens.toString()).to.be.equal(ether('990').toString());
+        expectEvent(tx, "Withdraw", { to: acc2, amountTokens: ether('490') });
+      });
+      it("take tokens AFTER 600 MINUTES by acc2", async () => {
+        let balanceBefore = await instanceToken.balanceOf(acc2);
+        expect(balanceBefore.toString()).to.be.equal(ether('990').toString());
+        let investor1 = await instanceVesting.listOfBeneficiaries(acc2);
+        expect(investor1[1].toString()).to.be.equal(ether('990').toString());
+        await time.increase(time.duration.minutes(300));
         let tx = await instanceVesting.withdrawTokens({ from: acc2 });
         balanceTokens = await instanceToken.balanceOf(acc2);
         expect(balanceTokens.toString()).to.be.equal(ether('1000').toString());
         let investorr1 = await instanceVesting.listOfBeneficiaries(acc2);
         expect(investorr1[1].toString()).to.be.equal(ether('1000').toString());
-        expectEvent(tx, "Withdraw", { to: acc2, amountTokens: ether('900') });
+        expectEvent(tx, "Withdraw", { to: acc2, amountTokens: ether('10') });
+      });
+      it("take tokens AFTER 600 MINUTES by acc4", async () => {
+        let balanceBefore = await instanceToken.balanceOf(acc4);
+        expect(balanceBefore.toString()).to.be.equal(ether('450').toString());
+        let investor3 = await instanceVesting.listOfBeneficiaries(acc4);
+        expect(investor3[1].toString()).to.be.equal(ether('450').toString());
+        await time.increase(time.duration.minutes(300));
+        let tx = await instanceVesting.withdrawTokens({ from: acc4 });
+        balanceTokens = await instanceToken.balanceOf(acc4);
+        expect(balanceTokens.toString()).to.be.equal(ether('4000').toString());
+        let investorr3 = await instanceVesting.listOfBeneficiaries(acc4);
+        expect(investorr3[1].toString()).to.be.equal(ether('4000').toString());
+        expectEvent(tx, "Withdraw", { to: acc4, amountTokens: ether('3550') });
       });
     });
 

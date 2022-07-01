@@ -73,8 +73,7 @@ contract Vesting is IVesting, Ownable {
                 listOfBeneficiaries[investors_[i]].intialReward += ((amount_[
                     i
                 ] / 10000) * 1000);
-                listOfBeneficiaries[investors_[i]].balanceBase += (amount_[i] -
-                    ((amount_[i] / 10000) * 1000));
+                listOfBeneficiaries[investors_[i]].balanceBase += amount_[i];
             }
             if (allocation_[i] == Allocation.Private) {
                 allocationList[allocation_[i]][
@@ -83,8 +82,7 @@ contract Vesting is IVesting, Ownable {
                 listOfBeneficiaries[investors_[i]].intialReward += ((amount_[
                     i
                 ] / 10000) * 1500);
-                listOfBeneficiaries[investors_[i]].balanceBase += (amount_[i] -
-                    ((amount_[i] / 10000) * 1500));
+                listOfBeneficiaries[investors_[i]].balanceBase += amount_[i];
             }
             sumOfAmount += amount_[i];
         }
@@ -107,37 +105,27 @@ contract Vesting is IVesting, Ownable {
                 listOfBeneficiaries[msg.sender].balanceBase,
             "Error : not enougth tokens"
         );
-        if (listOfBeneficiaries[msg.sender].intialReward > 0) {
-            uint256 amount = listOfBeneficiaries[msg.sender].intialReward +
-                (_calculatePercent(100) * _unlockTimer());
-            listOfBeneficiaries[msg.sender].intialReward = 0;
-            require(amount > 0, "Error : 'amount' equal to 0");
-            listOfBeneficiaries[msg.sender].rewardPaid += amount;
-            _token.safeTransfer(msg.sender, amount);
-            emit Withdraw(msg.sender, amount);
-        } else if (listOfBeneficiaries[msg.sender].intialReward == 0) {
-            uint256 amount = (_calculatePercent(100) * _unlockTimer());
-            require(amount > 0, "Error : 'amount' equal to 0");
-            listOfBeneficiaries[msg.sender].rewardPaid += amount;
-            _token.safeTransfer(msg.sender, amount);
-            emit Withdraw(msg.sender, amount);
-        }
+        uint256 amount = listOfBeneficiaries[msg.sender].intialReward +
+            (_calculateUnlock(100));
+        require(amount > 0, "Error : 'amount' equal to 0");
+        listOfBeneficiaries[msg.sender].intialReward = 0;
+        listOfBeneficiaries[msg.sender].rewardPaid += amount;
+        _token.safeTransfer(msg.sender, amount);
+        emit Withdraw(msg.sender, amount);
     }
 
-    function _calculatePercent(uint256 percent)
-        internal
-        view
-        returns (uint256)
-    {
-        return (listOfBeneficiaries[msg.sender].balanceBase / 10000) * percent;
-    }
-
-    function _unlockTimer() internal view returns (uint256) {
+    function _calculateUnlock(uint256 percent) internal view returns (uint256) {
+        uint256 onePercentInTokens = (listOfBeneficiaries[msg.sender]
+            .balanceBase / 10000) * percent;
         if (block.timestamp < vestingDuration) {
             uint256 actualTime = (block.timestamp - vestingCliff) / 6 minutes;
-            return actualTime;
+            return
+                (actualTime * onePercentInTokens) -
+                listOfBeneficiaries[msg.sender].rewardPaid;
         } else if (block.timestamp > vestingDuration) {
-            return 100;
+            return
+                (onePercentInTokens * 100) -
+                listOfBeneficiaries[msg.sender].rewardPaid;
         }
     }
 }

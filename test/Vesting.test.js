@@ -13,6 +13,11 @@ const {
 const { expect } = require("chai");
 const BN = Web3.utils.BN;
 
+let Allocation = {
+  Seed: 0,
+  Private: 1
+}
+
 contract("Vesting", async ([owner, acc2, acc3, acc4]) => {
 
   let instanceToken;
@@ -40,30 +45,40 @@ contract("Vesting", async ([owner, acc2, acc3, acc4]) => {
 
     describe("setInitialTimestamp function - false", async () => {
       it("setInitialTimestamp - caller is not the owner", async () => {
-        let vestingStartDateBefore = await instanceVesting.vestingStartDate.call();
-        expect(vestingStartDateBefore.toString()).to.be.equal(new BN(0).toString());
+        let vestingStartDateBefore = await instanceVesting.vestingStartDate();
+        expect(vestingStartDateBefore).to.be.bignumber.equal(new BN(0));
         await expectRevert(instanceVesting.setInitialTimestamp(new BN(60), { from: acc2 }), "Ownable: caller is not the owner");
         let vestingStartDate = await instanceVesting.vestingStartDate.call();
-        expect(vestingStartDate.toString()).to.be.equal(new BN(0).toString());
+        expect(vestingStartDate).to.be.bignumber.equal(new BN(0));
       });
       it("setInitialTimestamp - Error : 'initialTimestamp_' must be greater than 0", async () => {
         let vestingStartDateBefore = await instanceVesting.vestingStartDate.call();
-        expect(vestingStartDateBefore.toString()).to.be.equal(new BN(0).toString());
+        expect(vestingStartDateBefore).to.be.bignumber.equal(new BN(0));
         await expectRevert(instanceVesting.setInitialTimestamp(new BN(0)), "Error : 'initialTimestamp_' must be greater than 0");
         let vestingStartDate = await instanceVesting.vestingStartDate.call();
-        expect(vestingStartDate.toString()).to.be.equal(new BN(0).toString());
+        expect(vestingStartDate).to.be.bignumber.equal(new BN(0));
+      });
+    });
+
+    describe("withdrawTokens function - false", async () => {
+      it("withdrawTokens - Error : first call 'setInitialTimestamp'", async () => {
+        let balanceBefore = await instanceToken.balanceOf(acc2);
+        expect(balanceBefore).to.be.bignumber.equal(ether('0'));
+        await expectRevert(instanceVesting.withdrawTokens({ from: acc2 }), "Error : first call 'setInitialTimestamp'");
+        let balanceTokens = await instanceToken.balanceOf(acc2);
+        expect(balanceTokens).to.be.bignumber.equal(ether('0'));
       });
     });
 
     describe("setInitialTimestamp function - done", async () => {
       it("setInitialTimestamp - set 60 seconds to wait", async () => {
         let vestingStartDateBefore = await instanceVesting.vestingStartDate.call();
-        expect(vestingStartDateBefore.toString()).to.be.equal(new BN(0).toString());
-        let tx = await instanceVesting.setInitialTimestamp(new BN(60));
+        expect(vestingStartDateBefore).to.be.bignumber.equal(new BN(0));
+        let timee = await time.latest();
+        let tx = await instanceVesting.setInitialTimestamp(timee);
         let vestingStartDate = await instanceVesting.vestingStartDate.call();
-        let timeChecker = await time.latest();
-        expect(vestingStartDate.toString()).to.be.equal(timeChecker.add(new BN(60)).toString());
-        expectEvent(tx, "VestingStart", { startDate: timeChecker.add(new BN(60)) });
+        expect(vestingStartDate).to.be.bignumber.equal(timee);
+        expectEvent(tx, "SetInitialTime", { startDate: timee });
       });
     });
 
@@ -80,21 +95,21 @@ contract("Vesting", async ([owner, acc2, acc3, acc4]) => {
       it("set Investors - Error : Different arrays length", async () => {
         let arrayInvestors = [acc2, acc3];
         let arrayAmounts = [ether('1000'), ether('2000'), ether('3000')];
-        let arrayEnums = [new BN(0), new BN(1), new BN(0)];
+        let arrayEnums = [Allocation.Seed, Allocation.Private, Allocation.Seed];
         await instanceToken.approve(instanceVesting.address, ether('6000'));
         await expectRevert(instanceVesting.addInvestors(arrayInvestors, arrayAmounts, arrayEnums), "Error : Different arrays length");
       });
       it("set Investors - Error : Different arrays length", async () => {
         let arrayInvestors = [acc2, acc3];
         let arrayAmounts = [ether('1000'), ether('2000'), ether('3000')];
-        let arrayEnums = [new BN(0), new BN(1)];
+        let arrayEnums = [Allocation.Seed, Allocation.Private];
         await instanceToken.approve(instanceVesting.address, ether('6000'));
         await expectRevert(instanceVesting.addInvestors(arrayInvestors, arrayAmounts, arrayEnums), "Error : Different arrays length");
       });
       it("set Investors - Error : 'investors_' or 'amount_' , equal to 0", async () => {
         let arrayInvestors = [constants.ZERO_ADDRESS, acc3];
         let arrayAmounts = [ether('1000'), ether('2000')];
-        let arrayEnums = [new BN(0), new BN(1)];
+        let arrayEnums = [Allocation.Seed, Allocation.Private];
         await instanceToken.approve(instanceVesting.address, ether('6000'));
         await expectRevert(instanceVesting.addInvestors(arrayInvestors, arrayAmounts, arrayEnums), "Error : 'investors_' or 'amount_' , equal to 0");
       });
@@ -105,15 +120,18 @@ contract("Vesting", async ([owner, acc2, acc3, acc4]) => {
         let investor1 = await instanceVesting.listOfBeneficiaries(acc2);
         let investor2 = await instanceVesting.listOfBeneficiaries(acc3);
         let investor3 = await instanceVesting.listOfBeneficiaries(acc4);
-        expect(investor1[0].toString()).to.be.equal(ether('0').toString());
-        expect(investor1[1].toString()).to.be.equal(ether('0').toString());
-        expect(investor1[2].toString()).to.be.equal(ether('0').toString());
-        expect(investor2[0].toString()).to.be.equal(ether('0').toString());
-        expect(investor2[1].toString()).to.be.equal(ether('0').toString());
-        expect(investor2[2].toString()).to.be.equal(ether('0').toString());
-        expect(investor3[0].toString()).to.be.equal(ether('0').toString());
-        expect(investor3[1].toString()).to.be.equal(ether('0').toString());
-        expect(investor3[2].toString()).to.be.equal(ether('0').toString());
+        expect(investor1[0]).to.be.bignumber.equal(ether('0'));
+        expect(investor1[1]).to.be.bignumber.equal(ether('0'));
+        expect(investor1[2]).to.be.bignumber.equal(ether('0'));
+        expect(investor1[3]).to.be.bignumber.equal(ether('0'));
+        expect(investor2[0]).to.be.bignumber.equal(ether('0'));
+        expect(investor2[1]).to.be.bignumber.equal(ether('0'));
+        expect(investor2[2]).to.be.bignumber.equal(ether('0'));
+        expect(investor2[3]).to.be.bignumber.equal(ether('0'));
+        expect(investor3[0]).to.be.bignumber.equal(ether('0'));
+        expect(investor3[1]).to.be.bignumber.equal(ether('0'));
+        expect(investor3[2]).to.be.bignumber.equal(ether('0'));
+        expect(investor3[3]).to.be.bignumber.equal(ether('0'));
       });
     });
 
@@ -121,26 +139,28 @@ contract("Vesting", async ([owner, acc2, acc3, acc4]) => {
       it("set Investors - done", async () => {
         let arrayInvestors = [acc2, acc3, acc4];
         let arrayAmounts = [ether('1000'), ether('2000'), ether('3000')];
-        let arrayEnums = [new BN(0), new BN(1), new BN(0)];
+        let arrayEnums = [Allocation.Seed, Allocation.Private, Allocation.Seed];
         await instanceToken.approve(instanceVesting.address, ether('6000'));
         let tx = await instanceVesting.addInvestors(arrayInvestors, arrayAmounts, arrayEnums);
         let event = expectEvent(tx, "AddInvestors");
         expectEvent(tx, "AddInvestors", { investors: arrayInvestors });
         expect(event.args.balances.toString()).to.be.equal(arrayAmounts.toString());
+        expect(event.args.allocation.toString()).to.be.equal(arrayEnums.toString());
       });
       it("set Investors - done acc4 , have to allocations", async () => {
         let arrayInvestors = [acc4];
         let arrayAmounts = [ether('1000')];
-        let arrayEnums = [new BN(1)];
+        let arrayEnums = [Allocation.Private];
         investor3 = await instanceVesting.listOfBeneficiaries(acc4);
-        expect(investor3[2].toString()).to.be.equal(ether('3000').toString());
+        expect(investor3[2]).to.be.bignumber.equal(ether('3000'));
         await instanceToken.approve(instanceVesting.address, ether('1000'));
         let tx = await instanceVesting.addInvestors(arrayInvestors, arrayAmounts, arrayEnums);
         investor3After = await instanceVesting.listOfBeneficiaries(acc4);
-        expect(investor3After[2].toString()).to.be.equal(ether('4000').toString());
+        expect(investor3After[2]).to.be.bignumber.equal(ether('4000'));
         let event = expectEvent(tx, "AddInvestors");
         expectEvent(tx, "AddInvestors", { investors: arrayInvestors });
         expect(event.args.balances.toString()).to.be.equal(arrayAmounts.toString());
+        expect(event.args.allocation.toString()).to.be.equal(arrayEnums.toString());
       });
     });
 
@@ -149,15 +169,18 @@ contract("Vesting", async ([owner, acc2, acc3, acc4]) => {
         let investor1 = await instanceVesting.listOfBeneficiaries(acc2);
         let investor2 = await instanceVesting.listOfBeneficiaries(acc3);
         let investor3 = await instanceVesting.listOfBeneficiaries(acc4);
-        expect(investor1[0].toString()).to.be.equal(ether('100').toString());
-        expect(investor1[1].toString()).to.be.equal(ether('0').toString());
-        expect(investor1[2].toString()).to.be.equal(ether('1000').toString());
-        expect(investor2[0].toString()).to.be.equal(ether('300').toString());
-        expect(investor2[1].toString()).to.be.equal(ether('0').toString());
-        expect(investor2[2].toString()).to.be.equal(ether('2000').toString());
-        expect(investor3[0].toString()).to.be.equal(ether('450').toString());
-        expect(investor3[1].toString()).to.be.equal(ether('0').toString());
-        expect(investor3[2].toString()).to.be.equal(ether('4000').toString());
+        expect(investor1[0]).to.be.bignumber.equal(ether('100').toString());
+        expect(investor1[1]).to.be.bignumber.equal(ether('0').toString());
+        expect(investor1[2]).to.be.bignumber.equal(ether('1000').toString());
+        expect(investor1[3]).to.be.bignumber.equal(Allocation.Seed.toString());
+        expect(investor2[0]).to.be.bignumber.equal(ether('300').toString());
+        expect(investor2[1]).to.be.bignumber.equal(ether('0').toString());
+        expect(investor2[2]).to.be.bignumber.equal(ether('2000').toString());
+        expect(investor2[3]).to.be.bignumber.equal(Allocation.Private.toString());
+        expect(investor3[0]).to.be.bignumber.equal(ether('450').toString());
+        expect(investor3[1]).to.be.bignumber.equal(ether('0').toString());
+        expect(investor3[2]).to.be.bignumber.equal(ether('4000').toString());
+        expect(investor3[3]).to.be.bignumber.equal(Allocation.Private.toString());
       });
     });
   });
@@ -166,101 +189,134 @@ contract("Vesting", async ([owner, acc2, acc3, acc4]) => {
     describe("withdrawTokens function - false", async () => {
       it("withdrawTokens - Error : wait until cliff period is end ", async () => {
         let balanceBefore = await instanceToken.balanceOf(acc2);
-        expect(balanceBefore.toString()).to.be.equal(ether('0').toString());
+        expect(balanceBefore).to.be.bignumber.equal(ether('0'));
         await expectRevert(instanceVesting.withdrawTokens({ from: acc2 }), "Error : wait until cliff period is end");
         let balanceTokens = await instanceToken.balanceOf(acc2);
-        expect(balanceTokens.toString()).to.be.equal(ether('0').toString());
+        expect(balanceTokens).to.be.bignumber.equal(ether('0'));
       });
     });
 
     describe("withdrawTokens function - done", async () => {
       it("take tokens with SEED allocation", async () => {
         let balanceBefore = await instanceToken.balanceOf(acc2);
-        expect(balanceBefore.toString()).to.be.equal(ether('0').toString());
+        expect(balanceBefore).to.be.bignumber.equal(ether('0'));
         let investor1 = await instanceVesting.listOfBeneficiaries(acc2);
-        expect(investor1[1].toString()).to.be.equal(ether('0').toString());
-        await time.increase(time.duration.seconds(661));
+        expect(investor1[1]).to.be.bignumber.equal(ether('0'));
+        await time.increase(time.duration.minutes(10));
         let tx = await instanceVesting.withdrawTokens({ from: acc2 });
         let investorr1 = await instanceVesting.listOfBeneficiaries(acc2);
-        expect(investorr1[1].toString()).to.be.equal(ether('100').toString());
+        expect(investorr1[1]).to.be.bignumber.equal(ether('100'));
         balanceTokens = await instanceToken.balanceOf(acc2);
-        expect(balanceTokens.toString()).to.be.equal(ether('100').toString())
+        expect(balanceTokens).to.be.bignumber.equal(ether('100'))
         expectEvent(tx, "Withdraw", { to: acc2, amountTokens: ether('100') });
       });
       it("take tokens with PRIVATE allocation", async () => {
         let balanceBefore = await instanceToken.balanceOf(acc3);
-        expect(balanceBefore.toString()).to.be.equal(ether('0').toString());
+        expect(balanceBefore).to.be.bignumber.equal(ether('0'));
         let investor2 = await instanceVesting.listOfBeneficiaries(acc3);
-        expect(investor2[1].toString()).to.be.equal(ether('0').toString());
+        expect(investor2[1]).to.be.bignumber.equal(ether('0'));
         let tx = await instanceVesting.withdrawTokens({ from: acc3 });
         balanceTokens = await instanceToken.balanceOf(acc3);
-        expect(balanceTokens.toString()).to.be.equal(ether('300').toString());
+        expect(balanceTokens).to.be.bignumber.equal(ether('300'));
         let investorr2 = await instanceVesting.listOfBeneficiaries(acc3);
-        expect(investorr2[1].toString()).to.be.equal(ether('300').toString());
+        expect(investorr2[1]).to.be.bignumber.equal(ether('300'));
         expectEvent(tx, "Withdraw", { to: acc3, amountTokens: ether('300') });
       });
       it("take tokens with BOTH allocation", async () => {
         let balanceBefore = await instanceToken.balanceOf(acc4);
-        expect(balanceBefore.toString()).to.be.equal(ether('0').toString());
+        expect(balanceBefore).to.be.bignumber.equal(ether('0'));
         let investor3 = await instanceVesting.listOfBeneficiaries(acc4);
-        expect(investor3[1].toString()).to.be.equal(ether('0').toString());
+        expect(investor3[1]).to.be.bignumber.equal(ether('0'));
         let tx = await instanceVesting.withdrawTokens({ from: acc4 });
         balanceTokens = await instanceToken.balanceOf(acc4);
-        expect(balanceTokens.toString()).to.be.equal(ether('450').toString());
+        expect(balanceTokens).to.be.bignumber.equal(ether('450'));
         let investorr3 = await instanceVesting.listOfBeneficiaries(acc4);
-        expect(investorr3[1].toString()).to.be.equal(ether('450').toString());
+        expect(investorr3[1]).to.be.bignumber.equal(ether('450'));
         expectEvent(tx, "Withdraw", { to: acc4, amountTokens: ether('450') });
       });
       it("take tokens AFTER 300 MINUTES by acc2", async () => {
         let balanceBefore = await instanceToken.balanceOf(acc2);
-        expect(balanceBefore.toString()).to.be.equal(ether('100').toString());
+        expect(balanceBefore).to.be.bignumber.equal(ether('100'));
         let investor1 = await instanceVesting.listOfBeneficiaries(acc2);
-        expect(investor1[1].toString()).to.be.equal(ether('100').toString());
+        expect(investor1[1]).to.be.bignumber.equal(ether('100'));
         await time.increase(time.duration.minutes(300));
         let tx = await instanceVesting.withdrawTokens({ from: acc2 });
         let investorr1 = await instanceVesting.listOfBeneficiaries(acc2);
-        expect(investorr1[1].toString()).to.be.equal(ether('500').toString());
+        expect(investorr1[1]).to.be.bignumber.equal(ether('500'));
         balanceTokens = await instanceToken.balanceOf(acc2);
-        expect(balanceTokens.toString()).to.be.equal(ether('500').toString());
+        expect(balanceTokens).to.be.bignumber.equal(ether('500'));
         expectEvent(tx, "Withdraw", { to: acc2, amountTokens: ether('400') });
       });
+
+      it("withdrawTokens function - Error : 'amount' equal to 0", async () => {
+        let balanceTokensBefore = await instanceToken.balanceOf(acc2);
+        expect(balanceTokensBefore).to.be.bignumber.equal(ether('500'))
+        await expectRevert(instanceVesting.withdrawTokens({ from: acc2 }), "Error : 'amount' equal to 0");
+        let balanceTokens = await instanceToken.balanceOf(acc2);
+        expect(balanceTokens).to.be.bignumber.equal(ether('500'))
+      });
+
       it("take tokens AFTER 597 MINUTES by acc2", async () => {
         let balanceBefore = await instanceToken.balanceOf(acc2);
-        expect(balanceBefore.toString()).to.be.equal(ether('500').toString());
+        expect(balanceBefore).to.be.bignumber.equal(ether('500'));
         let investor1 = await instanceVesting.listOfBeneficiaries(acc2);
-        expect(investor1[1].toString()).to.be.equal(ether('500').toString());
+        expect(investor1[1]).to.be.bignumber.equal(ether('500'));
         await time.increase(time.duration.minutes(297));
         let tx = await instanceVesting.withdrawTokens({ from: acc2 });
         let investorr1 = await instanceVesting.listOfBeneficiaries(acc2);
-        expect(investorr1[1].toString()).to.be.equal(ether('990').toString());
+        expect(investorr1[1]).to.be.bignumber.equal(ether('990'));
         balanceTokens = await instanceToken.balanceOf(acc2);
-        expect(balanceTokens.toString()).to.be.equal(ether('990').toString());
+        expect(balanceTokens).to.be.bignumber.equal(ether('990'));
         expectEvent(tx, "Withdraw", { to: acc2, amountTokens: ether('490') });
       });
       it("take tokens AFTER 600 MINUTES by acc2", async () => {
         let balanceBefore = await instanceToken.balanceOf(acc2);
-        expect(balanceBefore.toString()).to.be.equal(ether('990').toString());
+        expect(balanceBefore).to.be.bignumber.equal(ether('990'));
         let investor1 = await instanceVesting.listOfBeneficiaries(acc2);
-        expect(investor1[1].toString()).to.be.equal(ether('990').toString());
+        expect(investor1[1]).to.be.bignumber.equal(ether('990'));
         await time.increase(time.duration.minutes(300));
         let tx = await instanceVesting.withdrawTokens({ from: acc2 });
         balanceTokens = await instanceToken.balanceOf(acc2);
-        expect(balanceTokens.toString()).to.be.equal(ether('1000').toString());
+        expect(balanceTokens).to.be.bignumber.equal(ether('1000'));
         let investorr1 = await instanceVesting.listOfBeneficiaries(acc2);
-        expect(investorr1[1].toString()).to.be.equal(ether('1000').toString());
+        expect(investorr1[1]).to.be.bignumber.equal(ether('1000'));
         expectEvent(tx, "Withdraw", { to: acc2, amountTokens: ether('10') });
+      });
+      it("set Investors - done", async () => {
+        let arrayInvestors = [acc2];
+        let arrayAmounts = [ether('1000')];
+        let arrayEnums = [new BN(0)];
+        await instanceToken.approve(instanceVesting.address, ether('6000'));
+        let tx = await instanceVesting.addInvestors(arrayInvestors, arrayAmounts, arrayEnums);
+        let event = expectEvent(tx, "AddInvestors");
+        expectEvent(tx, "AddInvestors", { investors: arrayInvestors });
+        expect(event.args.balances.toString()).to.be.equal(arrayAmounts.toString());
+        expect(event.args.allocation.toString()).to.be.equal(arrayEnums.toString());
+      });
+      it("take tokens AFTER 600 MINUTES by acc2 in second time", async () => {
+        let balanceBefore = await instanceToken.balanceOf(acc2);
+        expect(balanceBefore).to.be.bignumber.equal(ether('1000'));
+        let investor1 = await instanceVesting.listOfBeneficiaries(acc2);
+        expect(investor1[1]).to.be.bignumber.equal(ether('1000'));
+        // await time.increase(time.duration.minutes(300));
+        let tx = await instanceVesting.withdrawTokens({ from: acc2 });
+        balanceTokens = await instanceToken.balanceOf(acc2);
+        expect(balanceTokens).to.be.bignumber.equal(ether('2000'));
+        let investorr1 = await instanceVesting.listOfBeneficiaries(acc2);
+        expect(investorr1[1]).to.be.bignumber.equal(ether('2000'));
+        expectEvent(tx, "Withdraw", { to: acc2, amountTokens: ether('1000') });
       });
       it("take tokens AFTER 600 MINUTES by acc4", async () => {
         let balanceBefore = await instanceToken.balanceOf(acc4);
-        expect(balanceBefore.toString()).to.be.equal(ether('450').toString());
+        expect(balanceBefore).to.be.bignumber.equal(ether('450'));
         let investor3 = await instanceVesting.listOfBeneficiaries(acc4);
-        expect(investor3[1].toString()).to.be.equal(ether('450').toString());
+        expect(investor3[1]).to.be.bignumber.equal(ether('450'));
         await time.increase(time.duration.minutes(300));
         let tx = await instanceVesting.withdrawTokens({ from: acc4 });
         balanceTokens = await instanceToken.balanceOf(acc4);
-        expect(balanceTokens.toString()).to.be.equal(ether('4000').toString());
+        expect(balanceTokens).to.be.bignumber.equal(ether('4000'));
         let investorr3 = await instanceVesting.listOfBeneficiaries(acc4);
-        expect(investorr3[1].toString()).to.be.equal(ether('4000').toString());
+        expect(investorr3[1]).to.be.bignumber.equal(ether('4000'));
         expectEvent(tx, "Withdraw", { to: acc4, amountTokens: ether('3550') });
       });
     });
@@ -268,21 +324,20 @@ contract("Vesting", async ([owner, acc2, acc3, acc4]) => {
     describe("withdrawTokens function - false", async () => {
       it("withdrawTokens function - call after withdraw all tokens by acc2", async () => {
         let balanceTokensBefore = await instanceToken.balanceOf(acc2);
-        expect(balanceTokensBefore.toString()).to.be.equal(ether('1000').toString())
-        await expectRevert(instanceVesting.withdrawTokens({ from: acc2 }), "Error : not enougth tokens");
+        expect(balanceTokensBefore).to.be.bignumber.equal(ether('2000'))
+        await expectRevert(instanceVesting.withdrawTokens({ from: acc2 }), "Error : No available tokens to withdraw");
         let balanceTokens = await instanceToken.balanceOf(acc2);
-        expect(balanceTokens.toString()).to.be.equal(ether('1000').toString())
+        expect(balanceTokens).to.be.bignumber.equal(ether('2000'))
       });
-      it("withdrawTokens - Error : not enougth tokens ", async () => {
+      it("withdrawTokens - Error : No available tokens to withdraw ", async () => {
         let balanceBefore = await instanceToken.balanceOf(owner);
-        expect(balanceBefore.toString()).to.be.equal(ether('93000').toString())
-        await expectRevert(instanceVesting.withdrawTokens({ from: owner }), "Error : not enougth tokens");
+        expect(balanceBefore).to.be.bignumber.equal(ether('92000'))
+        await expectRevert(instanceVesting.withdrawTokens({ from: owner }), "Error : No available tokens to withdraw");
         let balanceTokens = await instanceToken.balanceOf(owner);
-        expect(balanceTokens.toString()).to.be.equal(ether('93000').toString())
+        expect(balanceTokens).to.be.bignumber.equal(ether('92000'))
       });
     });
 
   });
-
 
 });

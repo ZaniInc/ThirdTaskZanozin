@@ -38,12 +38,12 @@ contract Vesting is IVesting, Ownable {
      * @dev this mean 100% of tokens amount
      * @notice using to find percentage of the number
      */
-    uint256 public constant MAX_PERCENTAGE = 10000;
+    uint256 public constant MAX_PERCENTAGE = 100 ether;
     /**
      * @dev how many tokens will unlock after 6 minutes
      * @notice every 6 minutes unlock 1% of total amount
      */
-    uint256 public constant MAX_UNLOCK_AMOUNT = 100;
+    uint256 public constant MAX_UNLOCK_AMOUNT = 1 ether;
 
     /**
      * @dev mapping store all beneficiaries
@@ -90,8 +90,8 @@ contract Vesting is IVesting, Ownable {
             "Error : Incorrect address , only contract address"
         );
         _token = IERC20(token_);
-        _initialPercentage[AllocationType.SEED] = 1000;
-        _initialPercentage[AllocationType.PRIVATE] = 1500;
+        _initialPercentage[AllocationType.SEED] = 10 ether;
+        _initialPercentage[AllocationType.PRIVATE] = 15 ether;
     }
 
     /**

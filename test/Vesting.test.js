@@ -282,11 +282,11 @@ contract("Vesting", async ([owner, acc2, acc3, acc4]) => {
         expect(investorr1[1]).to.be.bignumber.equal(ether('1000'));
         expectEvent(tx, "Withdraw", { to: acc2, amountTokens: ether('10') });
       });
-      it("set Investors - done", async () => {
+      it("set Investors - done , acc2 in second time", async () => {
         let arrayInvestors = [acc2];
         let arrayAmounts = [ether('1000')];
-        let arrayEnums = [new BN(0)];
-        await instanceToken.approve(instanceVesting.address, ether('6000'));
+        let arrayEnums = [Allocation.Private];
+        await instanceToken.approve(instanceVesting.address, ether('1000'));
         let tx = await instanceVesting.addInvestors(arrayInvestors, arrayAmounts, arrayEnums);
         let event = expectEvent(tx, "AddInvestors");
         expectEvent(tx, "AddInvestors", { investors: arrayInvestors });

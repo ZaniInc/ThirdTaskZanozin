@@ -4,6 +4,22 @@ pragma solidity 0.8.7;
 
 interface IVesting {
     /**
+     * @dev Store info about beneficiaries
+     * @param initialReward - set how many tokens available to
+     * beneficiary for only once withdraw
+     * @param rewardPaid - update every time when call 'withdraw'
+     * @param balanceBase - total amount of tokens which will be available
+     * for beneficiary
+     * @param allocationType - contain in which round beneficiary invested
+     */
+    struct Beneficiary {
+        uint256 initialReward;
+        uint256 rewardPaid;
+        uint256 balanceBase;
+        AllocationType allocationType;
+    }
+
+    /**
      * @dev enum contain allocation type
      *
      * NOTE : use for calculate 'initialReward'
@@ -13,14 +29,32 @@ interface IVesting {
         PRIVATE
     }
 
+    /**
+     * @dev event logs info about date when vesting is start
+     *
+     * @param startDate - time when vesting period is started
+     */
     event SetInitialTime(uint256 startDate);
 
+    /**
+     * @dev event logs info about date when vesting is start
+     *
+     * @param investors - list of investors
+     * @param balances - list of balances for investors
+     * @param allocations - list of allocations types
+     */
     event AddInvestors(
         address[] investors,
         uint256[] balances,
-        AllocationType[] allocation
+        AllocationType[] allocations
     );
 
+    /**
+     * @dev event logs info about withdraw transaction
+     *
+     * @param to - whos withdraw tokens
+     * @param amountTokens - how many tokens will be withdraw
+     */
     event Withdraw(address to, uint256 amountTokens);
 
     /**

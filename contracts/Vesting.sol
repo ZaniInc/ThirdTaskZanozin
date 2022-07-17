@@ -19,22 +19,6 @@ contract Vesting is IVesting, Ownable {
     using Address for address;
 
     /**
-     * @dev Store info about beneficiaries
-     * @param initialReward - set how many tokens available to
-     * beneficiary for only once withdraw
-     * @param rewardPaid - update every time when call 'withdraw'
-     * @param balanceBase - total amount of tokens which will be available
-     * for beneficiary
-     * @param allocationType - contain in which round beneficiary invested
-     */
-    struct Beneficiary {
-        uint256 initialReward;
-        uint256 rewardPaid;
-        uint256 balanceBase;
-        AllocationType allocationType;
-    }
-
-    /**
      * @dev this mean 100% of tokens amount
      * @notice using to find percentage of the number
      */
@@ -86,7 +70,7 @@ contract Vesting is IVesting, Ownable {
      */
     constructor(address token_) {
         require(
-            Address.isContract(token_),
+            token_.isContract(),
             "Error : Incorrect address , only contract address"
         );
         _token = IERC20(token_);
@@ -145,10 +129,13 @@ contract Vesting is IVesting, Ownable {
                 "Error : 'investors_' or 'amount_' , equal to 0"
             );
             listOfBeneficiaries[investors_[i]].allocationType = allocations_[i];
-            listOfBeneficiaries[investors_[i]].balanceBase += amounts_[i];
             listOfBeneficiaries[investors_[i]].initialReward +=
-                (amounts_[i] / MAX_PERCENTAGE) *
-                _initialPercentage[allocations_[i]];
+                _initialPercentage[allocations_[i]] *
+                (amounts_[i] / MAX_PERCENTAGE);
+            listOfBeneficiaries[investors_[i]].balanceBase +=
+                amounts_[i] -
+                (_initialPercentage[allocations_[i]] *
+                    (amounts_[i] / MAX_PERCENTAGE));
             sumOfAmount += amounts_[i];
         }
         _token.safeTransferFrom(msg.sender, address(this), sumOfAmount);
@@ -162,23 +149,20 @@ contract Vesting is IVesting, Ownable {
      * 'msg.sender'
      */
     function withdrawTokens() external override {
-        require(
-            vestingStartDate > 0,
-            "Error : first call 'setInitialTimestamp'"
-        );
+        require(vestingStartDate > 0, "Error : Time for claim not setup");
         require(
             block.timestamp > vestingCliff,
             "Error : wait until cliff period is end"
         );
         require(
-            listOfBeneficiaries[msg.sender].balanceBase >
+            (listOfBeneficiaries[msg.sender].balanceBase +
+                listOfBeneficiaries[msg.sender].initialReward) >
                 listOfBeneficiaries[msg.sender].rewardPaid,
             "Error : No available tokens to withdraw"
         );
-        uint256 amount = _calculateUnlock(MAX_UNLOCK_AMOUNT);
+        uint256 amount = _calculateUnlock();
         require(amount > 0, "Error : 'amount' equal to 0");
         listOfBeneficiaries[msg.sender].rewardPaid += amount;
-        listOfBeneficiaries[msg.sender].initialReward = 0;
         _token.safeTransfer(msg.sender, amount);
         emit Withdraw(msg.sender, amount);
     }
@@ -187,23 +171,20 @@ contract Vesting is IVesting, Ownable {
      * @dev internal function for calculate how many tokens
      * beneficiary can take when call function withdraw
      */
-    function _calculateUnlock(uint256 percentage)
-        internal
-        view
-        returns (uint256)
-    {
-        uint256 onePercentInTokens = (listOfBeneficiaries[msg.sender]
-            .balanceBase / MAX_PERCENTAGE) * percentage;
+    function _calculateUnlock() internal view returns (uint256) {
+        uint256 onePercentInTokens = MAX_UNLOCK_AMOUNT *
+            (listOfBeneficiaries[msg.sender].balanceBase / MAX_PERCENTAGE);
         if (block.timestamp < vestingDuration) {
             uint256 passedPeriods = (block.timestamp - vestingCliff) /
                 6 minutes;
-            return
-                ((passedPeriods * onePercentInTokens) +
-                    listOfBeneficiaries[msg.sender].initialReward) -
+            uint256 total = ((passedPeriods * onePercentInTokens) +
+                listOfBeneficiaries[msg.sender].initialReward) -
                 listOfBeneficiaries[msg.sender].rewardPaid;
-        } else if (block.timestamp > vestingDuration) {
+            return total;
+        } else {
             return
-                (onePercentInTokens * 100) -
+                ((onePercentInTokens * 100) +
+                    listOfBeneficiaries[msg.sender].initialReward) -
                 listOfBeneficiaries[msg.sender].rewardPaid;
         }
     }

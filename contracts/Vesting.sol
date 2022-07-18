@@ -128,14 +128,12 @@ contract Vesting is IVesting, Ownable {
                 investors_[i] > address(0) && amounts_[i] > 0,
                 "Error : 'investors_' or 'amount_' , equal to 0"
             );
+            uint256 inittReward = (_initialPercentage[allocations_[i]] * amounts_[i]) / MAX_PERCENTAGE;
             listOfBeneficiaries[investors_[i]].allocationType = allocations_[i];
-            listOfBeneficiaries[investors_[i]].initialReward +=
-                _initialPercentage[allocations_[i]] *
-                (amounts_[i] / MAX_PERCENTAGE);
-            listOfBeneficiaries[investors_[i]].balanceBase +=
-                amounts_[i] -
-                (_initialPercentage[allocations_[i]] *
-                    (amounts_[i] / MAX_PERCENTAGE));
+            listOfBeneficiaries[investors_[i]].initialReward += inittReward;
+            listOfBeneficiaries[investors_[i]].balanceBase += amounts_[i] - inittReward;
+                // (_initialPercentage[allocations_[i]] *
+                //     (amounts_[i] / MAX_PERCENTAGE));
             sumOfAmount += amounts_[i];
         }
         _token.safeTransferFrom(msg.sender, address(this), sumOfAmount);
@@ -172,8 +170,8 @@ contract Vesting is IVesting, Ownable {
      * beneficiary can take when call function withdraw
      */
     function _calculateUnlock() internal view returns (uint256) {
-        uint256 onePercentInTokens = MAX_UNLOCK_AMOUNT *
-            (listOfBeneficiaries[msg.sender].balanceBase / MAX_PERCENTAGE);
+        uint256 onePercentInTokens = (MAX_UNLOCK_AMOUNT *
+            listOfBeneficiaries[msg.sender].balanceBase) / MAX_PERCENTAGE;
         if (block.timestamp < vestingDuration) {
             uint256 passedPeriods = (block.timestamp - vestingCliff) /
                 6 minutes;

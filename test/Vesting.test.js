@@ -304,15 +304,15 @@ contract("Vesting", async ([owner, acc2, acc3, acc4, acc5]) => {
         let investor1 = await instanceVesting.listOfBeneficiaries(acc5);
         expect(investor1[1]).to.be.bignumber.equal(ether('0'));
         let balanceBeforeOwner = await instanceToken.balanceOf(owner);
-        expect(balanceBeforeOwner).to.be.bignumber.equal(ether('93000'));
+        expect(balanceBeforeOwner).to.be.bignumber.equal(ether('92000'));
         let tx = await instanceVesting.withdrawTokens({ from: acc5 });
         let balanceAfterOwner = await instanceToken.balanceOf(owner);
         expect(balanceAfterOwner).to.be.bignumber.equal(ether('92000'));
         let investorr1 = await instanceVesting.listOfBeneficiaries(acc5);
-        expect(investorr1[1]).to.be.bignumber.equal(ether('9915'));
+        expect(investorr1[1]).to.be.bignumber.equal(ether('991.5'));
         balanceTokens = await instanceToken.balanceOf(acc2);
-        expect(balanceTokens).to.be.bignumber.equal(ether('9915'));
-        expectEvent(tx, "Withdraw", { to: acc2, amountTokens: ether('990') });
+        expect(balanceTokens).to.be.bignumber.equal(ether('991'));
+        expectEvent(tx, "Withdraw", { to: acc5, amountTokens: ether('991.5') });
       });
       it("take tokens AFTER 600 MINUTES by acc2", async () => {
         let balanceBefore = await instanceToken.balanceOf(acc2);
